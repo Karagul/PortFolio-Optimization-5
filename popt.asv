@@ -106,7 +106,7 @@ for day = 1:n2
         predPrice = [data2.(stock){day,'Date'} 1] * stockPred.(stock)';
         if P.(stock) % stock is in the portfolio 
             
-            if (currPrice - buyInP.(stock))/buyInP.(stock) >= 0.1075 || currPrice > predPrice + stockStd.(stock)
+            if (currPrice - buyInP.(stock))/buyInP.(stock) >= 0.1075 % currPrice > predPrice + stockStd.(stock) || (currPrice - buyInP.(stock))/buyInP.(stock) > 0.2 % 
                 % sell the fund
                 fprintf(['%d Sell ' stock ':%.2f @ %.2f\n'], day, vP.(stock), currPrice);
                 
@@ -121,17 +121,13 @@ for day = 1:n2
                 buyInP.(stock) = 0;
             end
         else % stock is not in the portfolio
-            if currPrice < predPrice - stockStd.(stock) &&  stockPred.(stock)(1) > 0 && cash > 0 ...
-                    && abs(data2.(stock).Close(1) - data2.(stock).Close(end))/...
-                    min(data2.(stock).Close(1), data2.(stock).Close(end)) < 3
+            if currPrice < predPrice - stockStd.(stock) &&  stockPred.(stock)(1) > 0 && cash > 0
 %                 currPrice = data2.(stock){day,'Close'};
 %                 rP.rIndex(i) = (predPrice - currPrice)/currPrice + ...
 %                     stockStd.(stock) /currPrice;
                 
                 rP.rIndex(i) = (predPrice - currPrice)/currPrice + ...
-                    stockStd.(stock) /currPrice - ...
-                    0.5* abs(data2.(stock).Close(1) - data2.(stock).Close(end))/...
-                    min(data2.(stock).Close(1), data2.(stock).Close(end));
+                    stockStd.(stock) /currPrice - data2.(stock).;
                 
                 
                 rP.nIndex(i) = std((data2.(stock).Close - [data2.(stock).Date ...
@@ -148,7 +144,7 @@ for day = 1:n2
     
     for i = 1: min(((cash - mod(cash,stockMin))/stockMin), size(rP,1))
         stock = rP.stocks{i};
-        if stockPred.(stock)(1) > 0 && rP.rIndex(i) ~= 0 
+        if rP.rIndex(i) > 0% && stockPred.(stock)(1) > 0
             P.(rP.stocks{i}) = P.(rP.stocks{i}) + stockMin/data2.(rP.stocks{i}){day,'Close'}; % # of holds
             buyInP.(rP.stocks{i}) = data2.(rP.stocks{i}){day,'Close'};
             fprintf(['%d: Buy ' rP.stocks{i} ':2500 @ %.2f \n'], day, buyInP.(rP.stocks{i}));
