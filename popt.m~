@@ -44,7 +44,7 @@ n2 = size(data2.FFNOX,1); % total # of days
  
 %% Control 
 cash = 25000;
-stockMin = 25000;
+stockMin = 2500;
 controlExp(data2,stockPred,cash,stockMin);
 
 
@@ -72,8 +72,6 @@ for day = 1:n2
 %     fprintf('%4f ', totalV);
 %     fprintf('\n');
     
-    stockMin = cash;
-
     % Update prediction 
     maxTimeNum = datenum('12/31/2013','mm/dd/yyyy') + day;
     timeWindow = 365*3;
@@ -106,7 +104,7 @@ for day = 1:n2
         predPrice = [data2.(stock){day,'Date'} 1] * stockPred.(stock)';
         if P.(stock) % stock is in the portfolio 
             
-            if (currPrice - buyInP.(stock))/buyInP.(stock) >= 0.1075 % currPrice > predPrice + stockStd.(stock) || (currPrice - buyInP.(stock))/buyInP.(stock) > 0.2 % 
+            if currPrice > predPrice + stockStd.(stock) || (currPrice - buyInP.(stock))/buyInP.(stock) > 0.2 % 
                 % sell the fund
                 fprintf(['%d Sell ' stock ':%.2f @ %.2f\n'], day, vP.(stock), currPrice);
                 
@@ -115,20 +113,15 @@ for day = 1:n2
                     pause
                 end
                 cash = cash + vP.(stock) - vP.(stock)*ratio;
-                stockMin = cash;
                 P.(stock) = 0;
                 vP.(stock) = 0;
                 buyInP.(stock) = 0;
             end
         else % stock is not in the portfolio
-            if currPrice < predPrice - stockStd.(stock) &&  stockPred.(stock)(1) > 0 && cash > 0
+            if currPrice < predPrice - stockStd.(stock) %&& stockPred.(stock)(1) > 0
 %                 currPrice = data2.(stock){day,'Close'};
-                rP.rIndex(i) = (predPrice - currPrice)/currPrice + ...
-                    stockStd.(stock) /currPrice;
-                
-                rP.nIndex(i) = std((data2.(stock).Close - [data2.(stock).Date ...
-                    ones(size(data2.(stock).Date,1),1)] * stockPred.(stock)')./([data2.(stock).Date ...
-                    ones(size(data2.(stock).Date,1),1)] * stockPred.(stock)'));
+                rP.rIndex(i) = (predPrice - currPrice)/currPrice; 
+                rP.nIndex(i) = data2.(stock).Close - data2.(stock).;
             end
         end
     end
@@ -137,7 +130,6 @@ for day = 1:n2
     
     % Buy funds with the best rewarding index
     rP = sortrows(rP,'rIndex','descend');
-    
     for i = 1: min(((cash - mod(cash,stockMin))/stockMin), size(rP,1))
         stock = rP.stocks{i};
         if rP.rIndex(i) > 0% && stockPred.(stock)(1) > 0
