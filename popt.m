@@ -12,8 +12,9 @@ pars = extractpars(varargin,pars);
 
 %% Download stock training data
 [~,~,fundList] = xlsread('Fund list.xlsx');
-% allData = getYahooDailyData(fundList(1:300), '01/01/2011', '12/31/2014', 'mm/dd/yyyy');
-load allData
+dateToday = datestr(now-1,'mm/dd/yyyy');
+allData = getYahooDailyData(fundList(1:300), '01/01/2011', dateToday, 'mm/dd/yyyy');
+% load allData
 % load 300fund
 
 %% rm stocks that has short history
@@ -28,7 +29,7 @@ end
 
 %% Create training and testing data
 data = getStockData(allData, '01/01/2011', '12/31/2013', 'mm/dd/yyyy');
-data2 = getStockData(allData, '01/01/2014', '12/31/2014', 'mm/dd/yyyy');
+data2 = getStockData(allData, dateToday, dateToday, 'mm/dd/yyyy');
 
 
 %% Get stock average performance
@@ -44,7 +45,7 @@ n2 = size(data2.FFNOX,1); % total # of days
  
 %% Control 
 cash = 25000;
-stockMin = 25000;
+stockMin = 2500;
 controlExp(data2,stockPred,cash,stockMin);
 
 
@@ -72,10 +73,11 @@ for day = 1:n2
 %     fprintf('%4f ', totalV);
 %     fprintf('\n');
     
-    stockMin = cash;
+%     stockMin = cash;
 
     % Update prediction 
-    maxTimeNum = datenum('12/31/2013','mm/dd/yyyy') + day;
+%     maxTimeNum = datenum('12/31/2013','mm/dd/yyyy') + day;
+    maxTimeNum = datenum(dateToday);
     timeWindow = 365*3;
     minTimeNum = maxTimeNum - timeWindow; 
     maxTime = datestr(datetime(maxTimeNum,'ConvertFrom','datenum'),'mm/dd/yyyy');
